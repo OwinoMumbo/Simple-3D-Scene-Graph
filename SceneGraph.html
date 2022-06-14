@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Scene Graph 2D</title>
+
+<script>
+
+    var canvas;   // The canvas that is used as the drawing surface
+    var graphics; // The 2D graphics context for drawing on the canvas.
+
+    var X_LEFT = -0;    // The xy limits for the coordinate system.
+    var X_RIGHT = 7;
+    var Y_BOTTOM = -1;
+    var Y_TOP = 4;
+    
+    var BACKGROUND = "rgb(10,5,3)";  // The display is filled with this color before the scene is drawn.
+         
+    var pixelSize;  // The size of one pixel, in the transformed coordinates.
+            
+    var frameNumber = 0;  // Current frame number. goes up by one in each frame.
+
+    var world;  // A SceneGraphNode representing the entire scene. 
+    
+    // TODO: Define global variables to represent animated objects in the scene.
+    
+    // Animated objects.
+	var vehicle; 
+	var vehicle2;
+	var vehicle3;
+	var vehicle4; 
+	var wheel;
+	var moon;
+	var tree;
+	var stars;
+	var logo;
+	
+	var ground = new SceneGraphNode();
+    //draws the hilly sand dunes 
+    ground.doDraw = function(g) {
+        g.beginPath();
+        g.moveTo(0,-1);
+        g.bezierCurveTo(-5,1,3,3,-2,0);
+        g.bezierCurveTo(0,2,5,3,6,0);
+        g.bezierCurveTo(-1,1,7,3,8,0);
+        g.closePath();
+        g.fill();
+    }
+//draws green grass paths by the highwway
+    var ground2 = new SceneGraphNode();
+    ground2.doDraw = function(g) {
+        g.beginPath();
+        g.moveTo(0,-3);
+        g.lineTo(-1,.9);
+        g.lineTo(55,-1);
+        g.closePath();
+        g.fill();
+    }
+
+
+//draws round bushy leaves
+    var treesleaves = new SceneGraphNode();
+    treesleaves.doDraw = function(g) {
+        g.beginPath();
+        g.moveTo(0,0);
+        g.lineTo(0.7,0.1);
+        g.lineTo(1.5,0);
+        g.lineTo(0.7,-0.1);
+        g.closePath();
+        g.fill();
+    }
+    
+    var logo = new SceneGraphNode();
+    logo.doDraw = function(g) {
+        graphics.font = "30px Comic Sans MS";
+	graphics.fillStyle = "red";
+	graphics.textAlign = "center";
+	graphics.fillText("Hello World", canvas.width/2, canvas.height/2);
+    } 
+    
+    //draws one instance of a yellow star
+    var star = new SceneGraphNode();
+    star.doDraw = function(g) {
+         g.fillStyle = "yellow";
+         g.beginPath();
+         g.moveTo(1.08, 0.0);
+         g.lineTo(1.41, .70);
+         g.lineTo(2.18, .783);
+         g.lineTo(1.62, 1.31);
+         g.lineTo(1.75, 2.05);
+         g.lineTo(1.08, 1.70);
+         g.lineTo(.412, 2.05);
+         g.lineTo(.55, 1.31);
+         g.lineTo(.1, .78);
+         g.lineTo(.75, .68);
+         g.lineTo(1.08, 0);
+         g.closePath();
+         g.fill();
+
+        }
+
+
+
+   
+    
+    
+    /**
+     *  Builds the data structure that represents the entire picture.
+     */
+    function createWorld() {
+
+         // Root node for the scene graph.
+
+        // TODO: Create objects and add them to the scene graph.
+        
+        var i;
+        var moonTemp = new CompoundObject();
+        moonTemp.setColor("rgb(250,240,230)"); // color for filled circle\
+        // the full moon
+        moonTemp.add( filledCircle );  
+        // outlines the glow of the moon
+        moonTemp.add( new TransformedObject(circle).setColor("white").setScale(1.01,1.01)); 
+        moon = new TransformedObject(moonTemp).setTranslation(-5,.3) ;
+        
+        var wheelTemp = new CompoundObject();
+       // color for the tyre
+        wheelTemp.setColor("black"); 
+        wheelTemp.add( new TransformedObject(filledCircle).setScale(2,2) );
+        wheelTemp.add( new TransformedObject(filledCircle).setScale(1.6,1.6).setColor("#CCCCCC") );
+        wheelTemp.add( new TransformedObject(filledCircle).setScale(0.4,0.4) );
+        for (i = 0; i < 12; i++) {  // add the 12 spokes
+           wheelTemp.add( new TransformedObject(line).setRotation(i*30).setColor("gold").setScale(1.5,5) );
+        }
+        wheel = new TransformedObject(wheelTemp);
+
+
+         var logoTemp = new CompoundObject();
+
+	logo = new TransformedObject(logoTemp);
+
+        
+        var vehicleTemp = new CompoundObject();
+        
+        // vehicle1 formed here
+        vehicleTemp.add( new TransformedObject(wheel).setScale(1,1).setTranslation(2,-0.1) );
+        vehicleTemp.add( new TransformedObject(wheel).setScale(1,1).setTranslation(-2,-0.1) );
+        // the body of the vehicle
+        vehicleTemp.add( new TransformedObject(filledRect).setScale(7,2).setTranslation(0,1) ); 
+        
+        // the top-bunk of the vehicle
+        vehicleTemp.add( new TransformedObject(filledRect).setScale(2.8,1.5).setTranslation(1.8,2) ); 
+        vehicleTemp.add( new TransformedObject(filledCircle).setScale(3,3.5).setTranslation(1.8,2) );
+        vehicle = new TransformedObject(vehicleTemp).setScale(0.3,0.3);
+        
+        
+        var vehicle2Temp = new CompoundObject();
+        // vehicle2 formed here
+        vehicle2Temp.add( new TransformedObject(wheel).setScale(1,1).setTranslation(2,-0.1) );
+        vehicle2Temp.add( new TransformedObject(wheel).setScale(1,1).setTranslation(-2,-0.1) );
+        
+        // the body of the vehicle
+        vehicle2Temp.add( new TransformedObject(filledRect).setScale(7,2).setTranslation(0,1) );
+        // the top-bunk of the vehicle
+        vehicle2Temp.add( new TransformedObject(filledRect).setScale(2.8,1.5).setTranslation(1.8,2) ); 
+        vehicle2Temp.add( new TransformedObject(filledCircle).setScale(3,3.5).setTranslation(1.8,2) );
+        vehicle2 = new TransformedObject(vehicle2Temp).setScale(0.3,0.3);
+        
+        var vehicle3Temp = new CompoundObject();
+        // vehicle3 formed here
+        vehicle3Temp.add( new TransformedObject(wheel).setScale(1,1).setTranslation(2,-0.1) );
+        vehicle3Temp.add( new TransformedObject(wheel).setScale(1,1).setTranslation(-2,-0.1) );
+        
+        // the body of the vehicle 
+        vehicle3Temp.add( new TransformedObject(filledRect).setScale(7,2).setTranslation(0,1) );
+        // the top-bunk of the vehicle
+        vehicle3Temp.add( new TransformedObject(filledRect).setScale(2.8,1.5).setTranslation(1.8,2) ); 
+        vehicle3Temp.add( new TransformedObject(filledCircle).setScale(3,3.5).setTranslation(1.8,2) );
+        vehicle3 = new TransformedObject(vehicle3Temp).setScale(0.3,0.3);
+        
+        
+        var vehicle4Temp = new CompoundObject();
+        // vehicle4 formed here
+        vehicle4Temp.add( new TransformedObject(wheel).setScale(1,1).setTranslation(2,-0.1) );
+        vehicle4Temp.add( new TransformedObject(wheel).setScale(1,1).setTranslation(-2,-0.1) );
+        
+        // the body of the vehicle
+        vehicle4Temp.add( new TransformedObject(filledRect).setScale(7,2).setTranslation(0,1) );
+        // the top-bunk of the vehicle
+        vehicle4Temp.add( new TransformedObject(filledRect).setScale(2.8,1.5).setTranslation(1.8,2) ); 
+        vehicle4Temp.add( new TransformedObject(filledCircle).setScale(3,3.5).setTranslation(1.8,2) );
+        vehicle4 = new TransformedObject(vehicle4Temp).setScale(0.3,0.3);
+        
+         // a "tree" consisting of leaves and bark
+        var treeTemp = new CompoundObject();
+        // color for all of the leaves
+        treeTemp.add(( filledCircle ));
+        treeTemp.add( new TransformedObject(filledCircle).setRotation(120).setColor( "green" ) );
+        treeTemp.add( new TransformedObject(filledCircle).setRotation(240) .setColor( "green" ).setScale(1.2,1.2).setTranslation(0,-0.5));
+        treeTemp.add( new TransformedObject(filledCircle).setRotation(360) .setColor( "green" ).setScale(1.7,1.7).setTranslation(0,-1.5));
+        tree = new TransformedObject(treeTemp);
+
+
+
+
+
+
+
+         var starsTemp = new CompoundObject(); 
+        starsTemp.add(star );
+        starsTemp.add( new TransformedObject(star).setRotation(120) );
+  
+        starsTemp.add( new TransformedObject(star).setRotation(240) );
+        starsTemp.add( new TransformedObject(star).setRotation(360) );
+        
+        stars = new TransformedObject(starsTemp);
+        
+        var sky = new CompoundObject();
+        sky.add( new TransformedObject(stars).setTranslation(-2,15) );
+        
+        var trees = new CompoundObject();
+         // color for the tree trunk
+        trees.setColor("brown");
+        // the tree trunk
+        trees.add( new TransformedObject(filledRect).setScale(0.2,3).setTranslation(0,1.5) ); 
+        trees.add( new TransformedObject(tree).setTranslation(0,3) ); 
+        
+        world = new CompoundObject();
+        
+        // sand dunes colour
+        world.setColor("#f4a460"); 
+        world.add(ground);
+        //path color
+        world.add((ground2).setColor("green"));
+       
+        // road
+        world.add( new TransformedObject(filledRect).setScale(7,0.8).setTranslation(3.5,0).setColor("#646496") ); 
+        
+         // double yellow line on the highway
+        world.add( new TransformedObject(filledRect).setScale(3*3.5,0.06).setTranslation(3.5,.1).setColor("yellow") );
+        world.add( new TransformedObject(filledRect).setScale(3*3.5,0.06).setTranslation(3.5,0).setColor("yellow") );
+      
+         //The stars in the sky 
+         world.add( new TransformedObject(sky).setScale(0.06,0.06).setTranslation(1.3,3) );
+        world.add( new TransformedObject(sky).setScale(0.07,0.07).setTranslation(2,2.9) );
+        world.add( new TransformedObject(sky).setScale(0.08,0.08).setTranslation(3,2.3) );
+        world.add( new TransformedObject(sky).setScale(0.09,0.09).setTranslation(8,2) );
+        world.add( new TransformedObject(sky).setScale(0.10,0.10).setTranslation(5,2.3) );
+        world.add( new TransformedObject(sky).setScale(0.11,0.11).setTranslation(7,2.2) );
+        world.add( new TransformedObject(sky).setScale(0.12,0.12).setTranslation(1.7,1.7) );
+        world.add( new TransformedObject(sky).setScale(0.13,0.13).setTranslation(6.5,1.9) );
+        world.add( new TransformedObject(sky).setScale(0.14,0.14).setTranslation(3.7,1.5) );
+        world.add( new TransformedObject(sky).setScale(0.15,0.15).setTranslation(4.5,1.2) );
+        world.add( new TransformedObject(sky).setScale(0.16,0.16).setTranslation(2.8,1.4) );
+        world.add( new TransformedObject(sky).setScale(0.17,0.17).setTranslation(5.9,1.2) );
+
+
+        world.add( new TransformedObject(trees).setScale(0.6,0.6).setTranslation(2,1) );
+        world.add( new TransformedObject(trees).setScale(0.6,0.6).setTranslation(0.7,1) );
+        world.add( new TransformedObject(trees).setScale(0.4,0.4).setTranslation(3.5,1.3) );
+        world.add( new TransformedObject(trees).setScale(0.3,0.3).setTranslation(4,0.7));
+        world.add( new TransformedObject(trees).setScale(0.5,0.5).setTranslation(5,0.5) );
+        world.add( new TransformedObject(trees).setScale(0.7,0.7).setTranslation(6,0.8) );
+        world.add( new TransformedObject(moon).setTranslation(5.5,3.3) );
+        
+        
+       
+
+        //added on coming traffic
+        world.add( new TransformedObject(vehicle4).setScale(-1,1).setTranslation(1,0.5).setColor("purple"));
+        world.add( new TransformedObject(vehicle3).setScale(-1,1).setColor("pink").setTranslation(1,0.5));
+        world.add( new TransformedObject(vehicle2).setScale(1,1).setColor("blue"));
+        world.add(( vehicle ).setColor("red"));
+    
+	world.add((logo ).setColor("red"));
+
+        
+    }
+    
+    /**
+     * This method is called just before each frame is drawn.  It updates the modeling
+     * transformations of the objects in the scene that are animated.
+     */
+    function updateFrame() {
+	frameNumber++;
+	
+        // TODO: Update state in preparation for drawing the next frame.
+        //rotatingRect.setRotation(frameNumber*0.75); // (DELETE THIS EXAMPLE)
+        vehicle.setTranslation(-2 + 13*(frameNumber % 400) / 400.0, 0);
+        vehicle2.setTranslation(-5 + 13*(frameNumber % 400) / 400.0, 0);
+        vehicle3.setTranslation(-8 + 13*(frameNumber % 400) / 400.0, 0);
+        vehicle4.setTranslation(-11 + 13*(frameNumber % 400) / 400.0, 0);
+        stars.setRotation(-frameNumber*.2);;
+        wheel.setRotation(-frameNumber*3.1);
+        moon.setRotation(-frameNumber);
+    }
+ 
+
+    //------------------- A Simple Scene Object-Oriented Scene Graph API ----------------
+    
+    /**
+     * The (abstract) base class for all nodes in the scene graph data structure.
+     */
+    function SceneGraphNode() {
+        this.fillColor = null;   // If non-null, the default fillStyle for this node.
+        this.strokeColor = null; // If non-null, the default strokeStyle for this node.
+    }
+    SceneGraphNode.prototype.doDraw = function(g) {
+            // This method is meant to be abstract and must be OVERRIDDEN in an actual
+            // object. It is not meant to be called; it is called by draw().
+        throw "doDraw not implemented in SceneGraphNode"
+    }
+    SceneGraphNode.prototype.draw = function(g) {
+           // This method should be CALLED to draw the object It should NOT
+           // ordinarily be overridden in subclasses.
+        graphics.save();
+        if (this.fillColor) {
+            g.fillStyle = this.fillColor;
+        }
+        if (this.strokeColor) {
+            g.strokeStyle = this.strokeColor;
+        }
+        this.doDraw(g);
+        graphics.restore();
+    }
+    SceneGraphNode.prototype.setFillColor = function(color) {
+            // Sets fillColor for this node to color.
+            // Color should be a legal CSS color string, or null.
+        this.fillColor = color;
+        return this;
+    }
+    SceneGraphNode.prototype.setStrokeColor = function(color) {
+            // Sets strokeColor for this node to color.
+            // Color should be a legal CSS color string, or null.
+        this.strokeColor = color;
+        return this;
+    }
+    SceneGraphNode.prototype.setColor = function(color) {
+            // Sets both the fillColor and strokeColor to color.
+            // Color should be a legal CSS color string, or null.
+        this.fillColor = color;
+        this.strokeColor = color;
+        return this;
+    }
+    
+    /**
+     *  Defines a subclass, CompoundObject, of SceneGraphNode to represent
+     *  an object that is made up of sub-objects.  Initially, there are no
+     *  sub-objects.  Objects are added with the add() method.
+     */
+    function CompoundObject() {
+        SceneGraphNode.call(this);  // do superclass initialization
+        this.subobjects = [];  // the list of sub-objects of this object
+    }
+    CompoundObject.prototype = new SceneGraphNode(); // (makes it a subclass!)
+    CompoundObject.prototype.add = function(node) {
+        this.subobjects.push(node);
+        return this;
+    }
+    CompoundObject.prototype.doDraw = function(g) {
+            // Just call the sub-objects' draw() methods.
+        for (var i = 0; i < this.subobjects.length; i++)
+            this.subobjects[i].draw(g);
+    }
+    
+    /**
+     *  Define a subclass, TransformedObject, of SceneGraphNode that
+     *  represents an object along with a modeling transformation to
+     *  be applied to that object.  The object must be specified in
+     *  the constructor.  The transformation is specified by calling
+     *  the setScale(), setRotate() and setTranslate() methods. Note that
+     *  each of these methods returns a reference to the TransformedObject
+     *  as its return value, to allow for chaining of method calls.
+     *  The modeling transformations are always applied to the object
+     *  in the order scale, then rotate, then translate.
+     */
+    function TransformedObject(object) {
+        SceneGraphNode.call(this);  // do superclass initialization
+        this.object = object;
+        this.rotationInDegrees = 0;
+        this.scaleX = 1;
+        this.scaleY = 1;
+        this.translateX = 0;
+        this.translateY = 0;
+    }
+    TransformedObject.prototype = new SceneGraphNode();  // (makes it a subclass!)
+    TransformedObject.prototype.setRotation = function(angle) {
+           // Set the angle of rotation, measured in DEGREES.  The rotation
+           // is always about the origin.
+        this.rotationInDegrees = angle;
+        return this;
+    }
+    TransformedObject.prototype.setScale = function(sx, sy) {
+           // Sets scaling factors.
+        this.scaleX = sx;
+        this.scaleY = sy;
+        return this;
+    }
+    TransformedObject.prototype.setTranslation = function(dx,dy) {
+           // Set translation mounts.
+        this.translateX = dx;
+        this.translateY = dy;
+        return this;
+    }
+    TransformedObject.prototype.doDraw = function(g) {
+            // Draws the object, with its modeling transformation.
+        g.save();
+        if (this.translateX != 0 || this.translateY != 0) {
+            g.translate(this.translateX, this.translateY);
+        }
+        if (this.rotationInDegrees != 0) {
+            g.rotate(this.rotationInDegrees/180*Math.PI);
+        }
+        if (this.scaleX != 1 || this.scaleY != 1) {
+            g.scale(this.scaleX, this.scaleY);
+        }
+        this.object.draw(g);
+        g.restore();
+    }
+    
+           // Create some basic shapes as custom SceneGraphNode objects.
+           
+    var line = new SceneGraphNode();  // Line from (-0.5,0) to (0.5,0)
+    line.doDraw = function(g) {
+        g.beginPath();
+        g.moveTo(-0.5,0);
+        g.lineTo(0.5,0);
+        g.stroke();
+    }
+    
+    var filledRect = new SceneGraphNode();  // Filled square, size = 1, center = (0,0)
+    filledRect.doDraw = function(g) {
+        g.fillRect(-0.5,-0.5,1,1);
+    }
+    
+    var rect = new SceneGraphNode(); // Stroked square, size = 1, center = (0,0)
+    rect.doDraw = function(g) {
+        g.strokeRect(-0.5,-0.5,1,1);
+    }
+    
+    var filledCircle = new SceneGraphNode(); // Filled circle, diameter = 1, center = (0,0)
+    filledCircle.doDraw = function(g) {
+        g.beginPath();
+        g.arc(0,0,0.5,0,2*Math.PI);
+        g.fill();
+    }
+    
+    var circle = new SceneGraphNode();// Stroked circle, diameter = 1, center = (0,0)
+    circle.doDraw = function(g) {
+        g.beginPath();
+        g.arc(0,0,0.5,0,2*Math.PI);
+        g.stroke();
+    }
+    
+    var filledTriangle = new SceneGraphNode(); // Filled Triangle, width 1, height 1, center of base at (0,0)
+    filledTriangle.doDraw = function(g) {
+        g.beginPath();
+        g.moveTo(-0.5,0);
+        g.lineTo(0.5,0);
+        g.lineTo(0,1);
+        g.closePath();
+        g.fill();
+    }   
+    
+   
+    
+    // ------------------------------- graphics support functions --------------------------
+    
+    /**
+      * Draw one frame of the animation.  Probably doesn't need to be changed,
+      * except maybe to change the setting of preserveAspect in applyLimits().
+      */
+    function draw() {
+        graphics.save();  // to make sure changes don't carry over from one call to the next
+        graphics.fillStyle = BACKGROUND;  // background color
+        graphics.fillRect(0,0,canvas.width,canvas.height);
+        graphics.fillStyle = "black";
+        applyLimits(graphics,X_LEFT,X_RIGHT,Y_TOP,Y_BOTTOM,false);
+        graphics.lineWidth = pixelSize;  // Use 1 pixel as the default line width
+        world.draw(graphics);
+        graphics.restore();
+    }
+    
+    /**
+     * Applies a coordinate transformation to the graphics context, to map
+     * xleft,xright,ytop,ybottom to the edges of the canvas.  This is called
+     * by draw().  This does not need to be changed.
+     */
+    function applyLimits(g, xleft, xright, ytop, ybottom, preserveAspect) {
+       var width = canvas.width;   // The width of this drawing area, in pixels.
+       var height = canvas.height; // The height of this drawing area, in pixels.
+       if (preserveAspect) {
+             // Adjust the limits to match the aspect ratio of the drawing area.
+          var displayAspect = Math.abs(height / width);
+          var requestedAspect = Math.abs(( ybottom-ytop ) / ( xright-xleft ));
+          var excess;
+          if (displayAspect > requestedAspect) {
+             excess = (ybottom-ytop) * (displayAspect/requestedAspect - 1);
+             ybottom += excess/2;
+             ytop -= excess/2;
+          }
+          else if (displayAspect < requestedAspect) {
+             excess = (xright-xleft) * (requestedAspect/displayAspect - 1);
+             xright += excess/2;
+             xleft -= excess/2;
+          }
+       }
+       var pixelWidth = Math.abs(( xright - xleft ) / width);
+       var pixelHeight = Math.abs(( ybottom - ytop ) / height);
+       pixelSize = Math.min(pixelWidth,pixelHeight);
+       g.scale( width / (xright-xleft), height / (ybottom-ytop) );
+       g.translate( -xleft, -ytop );
+    }
+    
+    
+    //------------------ Animation framework ------------------------------
+    
+    var running = false;  // This is set to true when animation is running
+    
+    function frame() {
+        if (running) {
+               // Draw one frame of the animation, and schedule the next frame.
+            updateFrame();
+            draw();
+            requestAnimationFrame(frame);
+        }
+    }
+    
+    function doAnimationCheckbox() { 
+        var shouldRun = document.getElementById("animateCheck").checked;
+        if ( shouldRun != running ) {
+            running = shouldRun;
+            if (running)
+                requestAnimationFrame(frame);
+        }
+    }
+    
+    //----------------------- initialization -------------------------------
+
+    function init() {
+        canvas = document.getElementById("thecanvas");
+        if (!canvas.getContext) {
+            document.getElementById("message").innerHTML = "ERROR: Canvas not supported";
+            return;
+        }
+        graphics = canvas.getContext("2d");
+        document.getElementById("animateCheck").checked = false; 
+        document.getElementById("animateCheck").onchange = doAnimationCheckbox; 
+        createWorld();
+        draw();
+    }
+
+</script>
+
+</head>
+
+<body onload="init()" style="background-color:#EEEEEE">
+
+<h3>Scene Graph 2D</h3>
+
+<noscript>
+   <p><b style="color:red">Error: This page requires JavaScript, but it is not available.</b></p>
+</noscript>
+
+<p id="message"><label><input type="checkbox" id="animateCheck"><b>Run the Animation</b></label></p>
+
+<div style="float:left; border: 2px solid black">
+<canvas id="thecanvas" width="800" height="600" style="display:block"></canvas>
+</div>
+
+
+</body>
+</html>
